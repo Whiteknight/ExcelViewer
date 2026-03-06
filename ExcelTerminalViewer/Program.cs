@@ -1,4 +1,5 @@
 using ExcelTerminalViewer;
+using ExcelTerminalViewer.Features.CellSearch;
 using ExcelTerminalViewer.Features.Cli;
 using ExcelTerminalViewer.Features.Display;
 using ExcelTerminalViewer.Features.FileLoading;
@@ -20,6 +21,10 @@ internal static class ProgramRunner
 
         if (!File.Exists(options.FilePath))
             return WriteErrorAndExit(new CliError($"File not found: {options.FilePath}"));
+
+        // Batch mode detection: if SearchTerm is provided, execute batch search
+        if (options.SearchTerm is not null)
+            return BatchSearchExecutor.ExecuteAsync(options).GetAwaiter().GetResult();
 
         var dataResult = FileLoader.Load(options.FilePath);
         if (dataResult.IsError)

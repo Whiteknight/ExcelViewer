@@ -5,7 +5,11 @@ public static class ArgumentParser
     public static Result<CliOptions, CliError> Parse(string[] args)
     {
         if (args.Length == 0)
-            return new CliError("Usage: ExcelTerminalViewer <file-path> [--max-width N] [--go-to ROW]");
+            return new CliError("Usage: ExcelTerminalViewer <file-path> [--max-width N] [--go-to ROW] [--search TERM]");
+
+        var validationResult = ValidateIncompatibleArguments(args);
+        if (validationResult.IsError)
+            return validationResult.Match(static _ => default!, static e => e);
 
         var filePath = args[0];
 
@@ -15,15 +19,25 @@ public static class ArgumentParser
 
         var maxWidth = maxWidthResult.Match(static v => v, static _ => 30);
 
+        string? searchTerm = null;
+        if (HasFlag(args, "--search"))
+        {
+            var searchTermResult = ParseSearchTerm(args);
+            if (searchTermResult.IsError)
+                return searchTermResult.Match(static _ => default!, static e => e);
+
+            searchTerm = searchTermResult.Match(static v => v, static _ => (string?)null);
+        }
+
         if (!HasFlag(args, "--go-to"))
-            return new CliOptions(filePath, maxWidth);
+            return new CliOptions(filePath, maxWidth, null, searchTerm);
 
         var goToRowResult = ParseGoToRow(args);
         if (goToRowResult.IsError)
             return goToRowResult.Match(static _ => default!, static e => e);
 
         var goToRow = goToRowResult.Match(static v => v, static _ => 0);
-        return new CliOptions(filePath, maxWidth, goToRow);
+        return new CliOptions(filePath, maxWidth, goToRow, searchTerm);
     }
 
     internal static bool HasFlag(string[] args, string flag) => Array.IndexOf(args, flag) >= 0;
@@ -60,5 +74,35 @@ public static class ArgumentParser
             return new CliError("--go-to must be at least 1.");
 
         return value;
+    }
+
+    private static Result<bool, CliError> ValidateIncompatibleArguments(string[] args)
+    {
+        var hasSearch = HasFlag(args, "--search");
+        var hasGoTo = HasFlag(args, "--go-to");
+        var hasMaxWidth = HasFlag(args, "--max-width");
+
+        if (hasSearch && hasGoTo)
+            return new CliError("Arguments --search and --go-to are incompatible.");
+
+        if (hasSearch && hasMaxWidth)
+            return new CliError("Arguments --search and --max-width are incompatible.");
+
+        return true;
+    }
+
+    private static Result<string?, CliError> ParseSearchTerm(string[] args)
+    {
+        var index = Array.IndexOf(args, "--search");
+
+        if (index + 1 >= args.Length)
+            return new CliError("--search requires a value.");
+
+        var searchTerm = args[index + 1];
+
+        if (string.IsNullOrWhiteSpace(searchTerm))
+            return new CliError("--search value cannot be empty.");
+
+        return searchTerm;
     }
 }

@@ -177,4 +177,104 @@ public class ArgumentParserTests
         options.MaxWidth.Should().Be(50);
         options.GoToRow.Should().Be(10);
     }
+
+    [Test]
+    public void Parse_SearchTermProvided_ReturnsSearchTerm()
+    {
+        var result = ArgumentParser.Parse(["data.csv", "--search", "hello"]);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Match(static o => o.SearchTerm, static _ => null)
+            .Should().Be("hello");
+    }
+
+    [Test]
+    public void Parse_SearchTermNotProvided_ReturnsNull()
+    {
+        var result = ArgumentParser.Parse(["data.csv"]);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Match(static o => o.SearchTerm, static _ => "error")
+            .Should().BeNull();
+    }
+
+    [Test]
+    public void Parse_SearchTermMissingValue_ReturnsError()
+    {
+        var result = ArgumentParser.Parse(["data.csv", "--search"]);
+
+        result.IsError.Should().BeTrue();
+        result.Match(static _ => "", static e => e.Message)
+            .Should().Contain("requires a value");
+    }
+
+    [Test]
+    public void Parse_SearchTermEmpty_ReturnsError()
+    {
+        var result = ArgumentParser.Parse(["data.csv", "--search", ""]);
+
+        result.IsError.Should().BeTrue();
+        result.Match(static _ => "", static e => e.Message)
+            .Should().Contain("cannot be empty");
+    }
+
+    [Test]
+    public void Parse_SearchTermWhitespace_ReturnsError()
+    {
+        var result = ArgumentParser.Parse(["data.csv", "--search", "   "]);
+
+        result.IsError.Should().BeTrue();
+        result.Match(static _ => "", static e => e.Message)
+            .Should().Contain("cannot be empty");
+    }
+
+    [Test]
+    public void Parse_SearchTermWithSpaces_ReturnsSearchTerm()
+    {
+        var result = ArgumentParser.Parse(["data.csv", "--search", "hello world"]);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Match(static o => o.SearchTerm, static _ => null)
+            .Should().Be("hello world");
+    }
+
+    [Test]
+    public void Parse_SearchWithGoTo_ReturnsIncompatibilityError()
+    {
+        var result = ArgumentParser.Parse(["data.csv", "--search", "term", "--go-to", "5"]);
+
+        result.IsError.Should().BeTrue();
+        var message = result.Match(static _ => "", static e => e.Message);
+        message.Should().Contain("--search").And.Contain("--go-to").And.Contain("incompatible");
+    }
+
+    [Test]
+    public void Parse_SearchWithMaxWidth_ReturnsIncompatibilityError()
+    {
+        var result = ArgumentParser.Parse(["data.csv", "--search", "term", "--max-width", "50"]);
+
+        result.IsError.Should().BeTrue();
+        var message = result.Match(static _ => "", static e => e.Message);
+        message.Should().Contain("--search").And.Contain("--max-width").And.Contain("incompatible");
+    }
+
+    [Test]
+    public void Parse_GoToWithSearch_ReturnsIncompatibilityError()
+    {
+        var result = ArgumentParser.Parse(["data.csv", "--go-to", "5", "--search", "term"]);
+
+        result.IsError.Should().BeTrue();
+        var message = result.Match(static _ => "", static e => e.Message);
+        message.Should().Contain("--search").And.Contain("--go-to").And.Contain("incompatible");
+    }
+
+    [Test]
+    public void Parse_MaxWidthWithSearch_ReturnsIncompatibilityError()
+    {
+        var result = ArgumentParser.Parse(["data.csv", "--max-width", "50", "--search", "term"]);
+
+        result.IsError.Should().BeTrue();
+        var message = result.Match(static _ => "", static e => e.Message);
+        message.Should().Contain("--search").And.Contain("--max-width").And.Contain("incompatible");
+    }
 }
