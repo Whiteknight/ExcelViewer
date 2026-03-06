@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ExcelTerminalViewer/ExcelTerminalViewer.csproj" />
+  <Project Path="ExcelTerminalViewer.Tests/ExcelTerminalViewer.Tests.csproj" />
+</Solution>

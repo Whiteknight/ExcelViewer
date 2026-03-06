@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ExcelTerminalViewer": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\projects\\cdos2\\Compendiums\\Complete_20260305\\Prod\\Legacy Health_03042026.xlsx\" --go-to 250"
+    }
+  }
+}
