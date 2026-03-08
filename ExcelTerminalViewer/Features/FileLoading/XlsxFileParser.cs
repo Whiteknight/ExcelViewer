@@ -6,10 +6,8 @@ namespace ExcelTerminalViewer.Features.FileLoading;
 public sealed class XlsxFileParser : IFileParser
 {
     public Result<SpreadsheetData, FileLoadError> Parse(string filePath)
-    {
-        return Result.Try(() => ParseInternal(filePath))
+        => Result.Try(() => ParseInternal(filePath))
             .MapError(e => new FileLoadError(e.Message));
-    }
 
     private static SpreadsheetData ParseInternal(string filePath)
     {
@@ -18,7 +16,7 @@ public sealed class XlsxFileParser : IFileParser
 
         var rangeUsed = worksheet.RangeUsed();
         if (rangeUsed is null)
-            return new SpreadsheetData([], []);
+            return SpreadsheetData.Empty;
 
         var firstRow = rangeUsed.FirstRow();
         var headers = ReadHeaders(firstRow);
@@ -28,11 +26,9 @@ public sealed class XlsxFileParser : IFileParser
     }
 
     private static List<string> ReadHeaders(IXLRangeRow headerRow)
-    {
-        return headerRow.CellsUsed()
+        => headerRow.CellsUsed()
             .Select(cell => CellNormalizer.Normalize(cell.GetFormattedString()))
             .ToList();
-    }
 
     private static List<IReadOnlyList<string>> ReadDataRows(IXLRange range, int columnCount)
     {

@@ -7,10 +7,9 @@ public static class FileLoader
     public static Result<SpreadsheetData, FileLoadError> Load(string filePath)
     {
         var parser = ResolveParser(filePath);
-        if (parser is null)
-            return new FileLoadError("Unsupported file extension. Supported: .xlsx, .xls, .csv");
-
-        return parser.Parse(filePath);
+        return parser is null
+            ? new FileLoadError("Unsupported file extension. Supported: .xlsx, .xls, .csv")
+            : parser.Parse(filePath);
     }
 
     private static IFileParser? ResolveParser(string filePath)

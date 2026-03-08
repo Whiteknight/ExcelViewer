@@ -18,6 +18,8 @@ public sealed class SpreadsheetData
         Rows = NotNull(rows);
     }
 
+    public static SpreadsheetData Empty => new SpreadsheetData([], []);
+
     public string GetCell(int row, int column)
     {
         if (row < 0 || row >= RowCount)

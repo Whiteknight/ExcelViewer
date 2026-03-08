@@ -1,16 +1,14 @@
+using System.Globalization;
 using CsvHelper;
 using ExcelTerminalViewer.Domain;
-using System.Globalization;
 
 namespace ExcelTerminalViewer.Features.FileLoading;
 
 public sealed class CsvFileParser : IFileParser
 {
     public Result<SpreadsheetData, FileLoadError> Parse(string filePath)
-    {
-        return Result.Try(() => ParseInternal(filePath))
+        => Result.Try(() => ParseInternal(filePath))
             .MapError(e => new FileLoadError(e.Message));
-    }
 
     private static SpreadsheetData ParseInternal(string filePath)
     {
@@ -27,12 +25,9 @@ public sealed class CsvFileParser : IFileParser
     }
 
     private static List<string> ReadHeaders(CsvReader csv)
-    {
-        var headerRecord = csv.HeaderRecord ?? [];
-        return headerRecord
+        => (csv.HeaderRecord ?? [])
             .Select(CellNormalizer.Normalize)
             .ToList();
-    }
 
     private static List<IReadOnlyList<string>> ReadAllRows(CsvReader csv, int columnCount)
     {
